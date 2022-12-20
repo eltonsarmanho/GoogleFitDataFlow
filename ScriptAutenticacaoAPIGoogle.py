@@ -19,14 +19,15 @@ CREDENTIALS_FILE = "./secret/credentials"
 def auth_data():
 
     credentials = ""
-
-    if os.path.exists(CREDENTIALS_FILE):
+    print(os.stat(CREDENTIALS_FILE).st_size == 0)
+    print(os.path.exists(CREDENTIALS_FILE))
+    if (os.path.exists(CREDENTIALS_FILE) and not(os.stat(CREDENTIALS_FILE).st_size == 0)):
         credentials = Storage(CREDENTIALS_FILE).get()
     else:
         # flow = OAuth2WebServerFlow(CLIENT_ID, CLIENT_SECRET, OAUTH_SCOPE, REDIRECT_URI)
         flow = flow_from_clientsecrets(
             # Specify the JSON file for OAuth acquired when API is enabled
-            './secret/client_secrets.json',
+            './secret/client_secret_2.json',
             # Specify the scope
             scope=OAUTH_SCOPE,
             # Specify the token receiving method after user authentication (described later)
@@ -39,7 +40,7 @@ def auth_data():
         code = input('Please enter Code: ').strip()
         credentials = flow.step2_exchange(code)
 
-        if not os.path.exists(CREDENTIALS_FILE):
+        if os.path.exists(CREDENTIALS_FILE) and (os.stat(CREDENTIALS_FILE).st_size == 0):
             Storage(CREDENTIALS_FILE).put(credentials)
 
         # Create an httplib2.Http object and authorize it with our credentials
