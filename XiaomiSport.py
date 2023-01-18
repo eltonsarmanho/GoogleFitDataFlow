@@ -111,7 +111,7 @@ class XiaomiSport():
 
     def main(self, phone, password, step):
         try:
-            phone = f'+86{phone}'
+            phone = f'+55{phone}'
             print(phone)
             login = self.login(phone, password)
             if login != '登录成功':
@@ -125,9 +125,9 @@ class XiaomiSport():
 
 
 # 手机号 12344445555
-phone = '12344445555'
+phone = '61999440636'
 # 密码
-password = '密码'
+password = 'Elton@1986'
 # 步数
 step = 20000
 print(XiaomiSport().main(phone, password, step))
