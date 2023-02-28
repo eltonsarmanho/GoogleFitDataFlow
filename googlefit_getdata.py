@@ -9,10 +9,12 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 
 OAUTH_SCOPE = [
+    "https://www.googleapis.com/auth/fitness.oxygen_saturation.read",
     "https://www.googleapis.com/auth/fitness.activity.read",
     "https://www.googleapis.com/auth/fitness.body.read",
     "https://www.googleapis.com/auth/fitness.location.read",
     "https://www.googleapis.com/auth/fitness.nutrition.read",
+    "https://www.googleapis.com/auth/fitness.sleep.read"
 ]
 
 
@@ -82,16 +84,25 @@ def get_google_fitness_info(
     request_body = {
         "aggregateBy": [
             {
-                "dataTypeName": "com.google.distance.delta",  # 移動距離
+                "dataTypeName": "com.google.oxygen_saturation.summary",
             },
             {
-                "dataTypeName": "com.google.step_count.delta",  # 歩数
+                "dataTypeName": "com.google.activity.summary",
             },
             {
-                "dataTypeName": "com.google.calories.expended",  # 消費カロリー
+                "dataTypeName": "com.google.sleep.segment",  # Sleep
             },
             {
-                "dataTypeName": "com.google.heart_minutes",  # 強めの運動
+                "dataTypeName": "com.google.distance.delta",  # Moving distance
+            },
+            {
+                "dataTypeName": "com.google.step_count.delta",  # number of steps
+            },
+            {
+                "dataTypeName": "com.google.calories.expended",  # calories burned
+            },
+            {
+                "dataTypeName": "com.google.heart_minutes",  # vigorous exercise
             },
         ],
         "bucketByTime": {  #A unit for aggregating data. 1 day for this example
@@ -137,9 +148,9 @@ def main(credential_path: str, target_date_before: int = 1) -> None:
 
     dataset = get_google_fitness_info(apiclient, start_time, end_time)
     print(dataset)
-    print(f"Distance traveled today: {dataset[0].get('point')[0].get('value')[0].get('fpVal')} m")
-    print(f"today's steps: {dataset[1].get('point')[0].get('value')[0].get('intVal')} passos")
-    print(f"today's calorie consumption: {dataset[2].get('point')[0].get('value')[0].get('fpVal')} kcal")
+    #print(f"Distance traveled today: {dataset[0].get('point')[0].get('value')[0].get('fpVal')} m")
+    #print(f"today's steps: {dataset[1].get('point')[0].get('value')[0].get('intVal')} passos")
+    #print(f"today's calorie consumption: {dataset[2].get('point')[0].get('value')[0].get('fpVal')} kcal")
     #print(f"vigorous exercise today: {dataset[3].get('point')[0].get('value')[0].get('fpVal')} point")
 
 
@@ -153,4 +164,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.credential_path, target_date_before=10)
+    main(args.credential_path, target_date_before=5)
