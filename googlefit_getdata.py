@@ -81,14 +81,12 @@ def get_google_fitness_info(
     # Convert date to milliseconds。
     start_unix_time_millis: int = int(time.mktime(start_time.timetuple()) * 1000)
     end_unix_time_millis: int = int(time.mktime(end_time.timetuple()) * 1000)
+    #start_unix_time_millis: int = start_time
+    #end_unix_time_millis: int = end_time
+
     request_body = {
         "aggregateBy": [
-            {
-                "dataTypeName": "com.google.oxygen_saturation.summary",
-            },
-            {
-                "dataTypeName": "com.google.activity.summary",
-            },
+
             {
                 "dataTypeName": "com.google.sleep.segment",  # Sleep
             },
@@ -138,20 +136,57 @@ def main(credential_path: str, target_date_before: int = 1) -> None:
     apiclient = create_apiclient(credential_path=credential_path)
 
     # set date
-    yesterday: datetime = datetime.today() - timedelta(days=target_date_before)
-    start_time: datetime = datetime(
-        yesterday.year, yesterday.month, yesterday.day, 0, 0, 0
+    TODAY: datetime = datetime.today() - timedelta(days=target_date_before)
+    STARTDAY: datetime = datetime(
+        TODAY.year, TODAY.month, TODAY.day, 0, 0, 0
     )
-    end_time: datetime = datetime(
-        yesterday.year, yesterday.month, yesterday.day, 23, 59, 59
+    NEXTDAY: datetime = datetime(
+        TODAY.year, TODAY.month, TODAY.day, 23, 59, 59
     )
+    NOW = datetime.today()
 
-    dataset = get_google_fitness_info(apiclient, start_time, end_time)
-    print(dataset)
-    #print(f"Distance traveled today: {dataset[0].get('point')[0].get('value')[0].get('fpVal')} m")
-    #print(f"today's steps: {dataset[1].get('point')[0].get('value')[0].get('intVal')} passos")
-    #print(f"today's calorie consumption: {dataset[2].get('point')[0].get('value')[0].get('fpVal')} kcal")
-    #print(f"vigorous exercise today: {dataset[3].get('point')[0].get('value')[0].get('fpVal')} point")
+    START = int(time.mktime(STARTDAY.timetuple()) * 1000)
+    NEXT = int(time.mktime(NEXTDAY.timetuple()) * 1000)
+    END = int(time.mktime(NOW.timetuple()) * 1000)
+
+    while True:
+            data_set = "%s-%s" % (datetime.fromtimestamp(START / 1000.0), datetime.fromtimestamp(NEXT / 1000.0))
+
+            print(data_set)
+            if END < NEXT:
+                break
+            dataset = get_google_fitness_info(apiclient, STARTDAY, NEXTDAY)
+
+            if(not(dataset[0].get('point'))):
+                print("Empty Sleep")
+            else: print(f"Sleep segment:           {dataset[0].get('point').get('value')[0].get('intVal')} ")
+
+            if (not (dataset[1].get('point'))):
+                print("Empty Distance traveled")
+            else:
+                print(f"Distance traveled today: {dataset[1].get('point')[0].get('value')[0].get('fpVal')} m")
+
+            if (not (dataset[2].get('point'))):
+                print("Empty Steps")
+            else:
+                print(f"today's steps:           {dataset[2].get('point')[0].get('value')[0].get('intVal')} passos")
+
+            if (not (dataset[3].get('point'))):
+                print("Empty calorie consumption")
+            else:
+                print(f"today's calorie consumption: {dataset[3].get('point')[0].get('value')[0].get('fpVal')} kcal")
+
+            if (not (dataset[4].get('point'))):
+                print("Empty vigorous exercise")
+            else:
+                print(f"vigorous exercise today:     {dataset[4].get('point')[0].get('value')[0].get('fpVal')} point")
+
+            print("\n")
+
+            STARTDAY = STARTDAY + timedelta(days=1)
+            NEXTDAY = NEXTDAY + timedelta(days=1)
+            START = int(time.mktime(STARTDAY.timetuple()) * 1000)
+            NEXT = int(time.mktime(NEXTDAY.timetuple()) * 1000)
 
 
 if __name__ == "__main__":
@@ -164,4 +199,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.credential_path, target_date_before=5)
+    main(args.credential_path, target_date_before=15)
