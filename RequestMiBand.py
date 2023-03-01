@@ -25,8 +25,10 @@ def get_detail(track_id, source):
 
     return r.json()
 if __name__ == '__main__':
+    APP_NAME = "com.huami.watch.hmwatchmanager"
     APP_NAME = "com.xiaomi.hm.health"
+    #APP_NAME = "com.xiaomi.bluetooth"
     APP_PLATFORM = "web"
     token = "UQVBQEJyQktGXip6SltGImp2ej48BAAEAAAAAjgkSTzczBFJs2vysA_qqopPWVSyTCsdNCjfNQIAfgXiO6rgu-eEbkIVc66hRRTWdSh4pKe_7es3GxsT6OwGQ1LzjrJmeDKvrYhLZrt2yF9ojfXyKB6fzyUkVfuCfPUMT9HkSMK8IJqT7jgcmJP68zRa_ci-fF4avx1PzyRZZibQpCZV8-8cKeAKvwY7rtD4w"
-    #print(get_history())
-    print(get_detail('1673992911', 'run.263.huami.com'))
+    print(get_history())
+    #print(get_detail('1673992911', 'run.263.huami.com'))
