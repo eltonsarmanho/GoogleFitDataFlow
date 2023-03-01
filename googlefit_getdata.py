@@ -8,13 +8,15 @@ from apiclient.discovery import build
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 
+
 OAUTH_SCOPE = [
     "https://www.googleapis.com/auth/fitness.oxygen_saturation.read",
     "https://www.googleapis.com/auth/fitness.activity.read",
     "https://www.googleapis.com/auth/fitness.body.read",
     "https://www.googleapis.com/auth/fitness.location.read",
     "https://www.googleapis.com/auth/fitness.nutrition.read",
-    "https://www.googleapis.com/auth/fitness.sleep.read"
+    "https://www.googleapis.com/auth/fitness.sleep.read",
+    "https://www.googleapis.com/auth/fitness.heart_rate.read"
 ]
 
 
@@ -59,7 +61,7 @@ def create_apiclient(credential_path: str) -> any:
 
     http = httplib2.Http()
     http = credentials.authorize(http)
-    credentials.refresh(http)  # 認証トークンを更新する。
+    credentials.refresh(http)  # Atualize um token de autenticação.
     apiclient = build("fitness", "v1", http=http)
     return apiclient
 
@@ -81,13 +83,17 @@ def get_google_fitness_info(
     # Convert date to milliseconds。
     start_unix_time_millis: int = int(time.mktime(start_time.timetuple()) * 1000)
     end_unix_time_millis: int = int(time.mktime(end_time.timetuple()) * 1000)
-    #start_unix_time_millis: int = start_time
-    #end_unix_time_millis: int = end_time
+
+    #DATA_SOURCE = "raw:com.google.activity.segment:com.huawei.health:"
+    DATA_SOURCE = "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm"
 
     request_body = {
+
         "aggregateBy": [
 
+
             {
+
                 "dataTypeName": "com.google.sleep.segment",  # Sleep
             },
             {
@@ -102,7 +108,19 @@ def get_google_fitness_info(
             {
                 "dataTypeName": "com.google.heart_minutes",  # vigorous exercise
             },
+            {
+
+                "dataTypeName": "com.google.heart_rate.bpm",
+                # This data type captures the user's heart rate in beats per minute
+            },
+            {
+                "dataTypeName": "com.google.oxygen_saturation",
+                # The amount of oxygen circulating in the blood
+            },
+
+
         ],
+
         "bucketByTime": {  #A unit for aggregating data. 1 day for this example
             "durationMillis": end_unix_time_millis - start_unix_time_millis
         },
@@ -114,7 +132,7 @@ def get_google_fitness_info(
         (
             apiclient.users()
             .dataset()
-            .aggregate(userId="me", body=request_body)
+            .aggregate(userId="me",  body=request_body)
             .execute()
         )
         .get("bucket")[0]
@@ -150,13 +168,15 @@ def main(credential_path: str, target_date_before: int = 1) -> None:
     END = int(time.mktime(NOW.timetuple()) * 1000)
 
     while True:
-            data_set = "%s-%s" % (datetime.fromtimestamp(START / 1000.0), datetime.fromtimestamp(NEXT / 1000.0))
 
+            data_set = "%s-%s" % (START, NEXT)
+            print(data_set)
+            data_set = "%s-%s" % (datetime.fromtimestamp(START / 1000.0), datetime.fromtimestamp(NEXT / 1000.0))
             print(data_set)
             if END < NEXT:
                 break
             dataset = get_google_fitness_info(apiclient, STARTDAY, NEXTDAY)
-
+            print(dataset)
             if(not(dataset[0].get('point'))):
                 print("Empty Sleep")
             else: print(f"Sleep segment:           {dataset[0].get('point').get('value')[0].get('intVal')} ")
@@ -181,6 +201,16 @@ def main(credential_path: str, target_date_before: int = 1) -> None:
             else:
                 print(f"vigorous exercise today:     {dataset[4].get('point')[0].get('value')[0].get('fpVal')} point")
 
+            if (not (dataset[5].get('point'))):
+                print("Empty Heart Rate")
+            else:
+                print(f"Heart Rate:     {dataset[5].get('point')[0].get('value')[0].get('fpVal')} bpm")
+
+            if (not (dataset[6].get('point'))):
+                print("Empty Oxygen saturation")
+            else:
+                print(f"Oxygen saturation:     {dataset[6].get('point')[0].get('value')[0].get('fpVal')} bpm")
+
             print("\n")
 
             STARTDAY = STARTDAY + timedelta(days=1)
@@ -199,4 +229,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.credential_path, target_date_before=15)
+    main(args.credential_path, target_date_before=25)
