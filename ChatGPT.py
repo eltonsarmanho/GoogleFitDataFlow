@@ -19,7 +19,7 @@ fitness_service = build('fitness', 'v1', http=http)
 
 data_sources = fitness_service.users().dataSources().list(userId='me').execute()
 print(data_sources)
-DATA_SOURCE = "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm"
+#DATA_SOURCE = "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm"
 
 DATA_SOURCE = 'derived:com.google.sleep.segment:com.google.android.gms:merged'
 zepp_data = fitness_service.users().dataSources(). \
