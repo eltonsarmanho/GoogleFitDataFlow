@@ -18,14 +18,22 @@ http = credentials.authorize(http)
 fitness_service = build('fitness', 'v1', http=http)
 
 data_sources = fitness_service.users().dataSources().list(userId='me').execute()
-print(data_sources)
+#print(data_sources)
 #DATA_SOURCE = "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm"
 
-DATA_SOURCE = 'derived:com.google.sleep.segment:com.google.android.gms:merged'
-zepp_data = fitness_service.users().dataSources(). \
-    datasets(). \
-    get(userId='me', dataSourceId=DATA_SOURCE,
-        datasetId='1676170800000000000-1676257199000000000'). \
-    execute()
-
-print(zepp_data)
+DATA_SOURCE = {
+    "steps": "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas",
+    "estimated_steps":'derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
+    "bpm": "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm",
+    "rhr": "derived:com.google.heart_rate.bpm:com.google.android.gms:resting_heart_rate<-merge_heart_rate_bpm",
+    "sleep" :'derived:com.google.sleep.segment:com.google.android.gms:merged',
+    'cal':'derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended',
+    'oxygen_saturation':'derived:com.google.oxygen_saturation.summary:com.google.android.gms:merged'
+}
+for key, value in DATA_SOURCE.items():
+    zepp_data = fitness_service.users().dataSources(). \
+        datasets(). \
+        get(userId='me', dataSourceId=value,
+            datasetId='1676170800000000000-1676257199000000000'). \
+        execute()
+    print(zepp_data)

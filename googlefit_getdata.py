@@ -86,14 +86,12 @@ def get_google_fitness_info(
 
     #DATA_SOURCE = "raw:com.google.activity.segment:com.huawei.health:"
     DATA_SOURCE = "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm"
+    DATA_SOURCE = 'derived:com.google.sleep.segment:com.google.android.gms:merged'
 
     request_body = {
 
         "aggregateBy": [
-
-
             {
-
                 "dataTypeName": "com.google.sleep.segment",  # Sleep
             },
             {

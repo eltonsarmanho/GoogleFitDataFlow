@@ -87,7 +87,7 @@ if __name__ == "__main__":
     authdata = auth_data()
 
     #Get the data for the previous day
-    TODAY = datetime.today() - timedelta(days=10)
+    TODAY = datetime.today() - timedelta(days=30)
     STARTDAY = datetime(TODAY.year, TODAY.month, TODAY.day, 0, 0, 0)
     NEXTDAY = datetime(TODAY.year, TODAY.month, TODAY.day, 23, 59, 59)
     NOW = datetime.today()
@@ -95,9 +95,13 @@ if __name__ == "__main__":
     START = int(time.mktime(STARTDAY.timetuple())*1000000000)
     NEXT = int(time.mktime(NEXTDAY.timetuple())*1000000000)
     END = int(time.mktime(NOW.timetuple())*1000000000)
+
     data_set = "%s-%s" % (START, NEXT)
 
     while True:
+        print(data_set)
+        data_set_data = "%s-%s" % (datetime.fromtimestamp(START / 1000000000.0), datetime.fromtimestamp(NEXT / 1000000000.0))
+        print(data_set_data)
 
         if END < NEXT:
             break
@@ -108,17 +112,18 @@ if __name__ == "__main__":
         ends = []
         values = []
         #print(type(dataset))
-        print(dataset)
+        #print(dataset)
 
-        # for point in dataset["point"]:
-        #     if int(point["startTimeNanos"]) > START:
-        #         starts.append(int(point["startTimeNanos"]))
-        #         ends.append(int(point["endTimeNanos"]))
-        #         values.append(point['value'][0]['fpVal'])
+        for point in dataset["point"]:
+              if int(point["startTimeNanos"]) > START:
+                 starts.append(int(point["startTimeNanos"]))
+                 ends.append(int(point["endTimeNanos"]))
+                 values.append(point['value'][0]['fpVal'])
         #
-        # print("From: {}".format(nanoseconds(min(starts))))
-        # print("To: {}".format(nanoseconds(max(ends))))
-        # print("Mean HR:{}".format(np.mean(values)))
+        if(starts is not None):
+            print("From: {}".format(nanoseconds(min(starts))))
+            print("To: {}".format(nanoseconds(max(ends))))
+            print("Mean HR:{}".format(np.mean(values)))
         #
         # step = np.mean(values)
         #
