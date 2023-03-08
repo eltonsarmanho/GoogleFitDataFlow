@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import httplib2
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
-
+import numpy as np
 
 
 OAUTH_SCOPE = [
@@ -23,14 +23,24 @@ OAUTH_SCOPE = [
     "https://www.googleapis.com/auth/fitness.heart_rate.read"
 ]
 DATA_SOURCE = {
-    #"steps": "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas",
+    "steps": "derived:com.google.step_count.delta:com.google.android.gms:merge_step_deltas",
     #"estimated_steps":'derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
     "bpm": "derived:com.google.heart_rate.bpm:com.google.android.gms:merge_heart_rate_bpm",
-    #"rhr": "derived:com.google.heart_rate.bpm:com.google.android.gms:resting_heart_rate<-merge_heart_rate_bpm",
+    "rhr": "derived:com.google.heart_rate.bpm:com.google.android.gms:resting_heart_rate<-merge_heart_rate_bpm",
     "sleep" :'derived:com.google.sleep.segment:com.google.android.gms:merged',
-    #'cal':'derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended',
+    'cal':'derived:com.google.calories.expended:com.google.android.gms:merge_calories_expended',
     #'BMR':'raw:com.google.weight:com.xiaomi.hm.health:GoogleFitSyncHelper - weight',
     #'activities':'derived:com.google.activity.segment:com.google.android.gms:merge_activity_segments'
+}
+
+dict_sleep={
+0 : "Unspecified",
+1:  "Awake: usuário está acordado.",
+2 : "Sleeping: Descrição do sono genérico.",
+3 : "Out of bed: usuário sai da cama no meio de uma sessão de sono.",
+4 : "Light sleep: Ciclo de sono Leve.",
+5 : "Deep sleep: Ciclo de sono profundo.",
+6 : "REM sleep: user is in a REM sleep cycle."
 }
 
 def oauth2(credential_path: str):
@@ -133,9 +143,9 @@ def main(credential_path: str,target_date_before: int = 1) -> None:
     while True:
 
                 data_set = "%s-%s" % (START, NEXT)
-                print(data_set)
+                #print(data_set)
                 time_data_set = "%s-%s" % (datetime.fromtimestamp(START / 1000000000.0), datetime.fromtimestamp(NEXT / 1000000000.0))
-                print(time_data_set)
+                print("Relatório do dia %s" % datetime.fromtimestamp(START / 1000000000.0).strftime('%d-%m-%y'))
                 if END < NEXT:
                     break
                 for key, value in DATA_SOURCE.items():
@@ -144,18 +154,43 @@ def main(credential_path: str,target_date_before: int = 1) -> None:
                         get(userId='me', dataSourceId=value,
                             datasetId=data_set). \
                         execute()
-                    print(key)
                     if(key == 'bpm'):
+                        lst_hrv = []
                         for point in zepp_data["point"]:
                                 if int(point["startTimeNanos"]) > START:
-                                    print(f"Heart Rate:     {point['value'][0]['fpVal']} bpm")
+                                    lst_hrv.append(point['value'][0]['fpVal'])
+                        print(f"Heart Rate diário: {np.mean(lst_hrv).round(2)} bpm")
+
+                    if (key == 'rhr'):
+                        lst_hrv = []
+                        for point in zepp_data["point"]:
+                            if int(point["startTimeNanos"]) > START:
+                                lst_hrv.append(point['value'][0]['fpVal'])
+                        print(f"Heart Rate em repouso diário: {np.mean(lst_hrv).round(2)} bpm")
+
                     if (key == 'sleep'):
                             for point in zepp_data["point"]:
                                 if int(point["startTimeNanos"]) > START:
-                                    print(f"Sleep Value:     {point['value'][0]['intVal']} value")
+                                    print(f"Ponto do Sono:   {dict_sleep.get(point['value'][0]['intVal'])} em  {datetime.fromtimestamp(int(point['startTimeNanos']) / 1000000000.0)}")
 
-                    print("\n")
+                    if(key=='cal'):
+                        lst_cal = []
+                        for point in zepp_data["point"]:
+                            if int(point["startTimeNanos"]) > START:
+                                lst_cal.append(point['value'][0]['fpVal'])
+                        print(f"Gasto Calórico Médio Diário: {np.mean(lst_cal).round(2)} Kcal")
+                        print(f"Gasto Calórico Total Diário: {np.sum(lst_cal).round(2)} Kcal")
 
+                    if (key == 'steps'):
+                        lst_steps = []
+                        for point in zepp_data["point"]:
+                            if int(point["startTimeNanos"]) > START:
+                                #print(f"Sleep segment: {point['value'][0].get('intVal')} ")
+                                lst_steps.append(point['value'][0]['intVal'])
+                        print(f"Número de Passos Total Diário: {np.sum(lst_steps).round(2)} passos")
+                        print(f"Número de Passos Médio Diário: {np.mean(lst_steps).round(2)} passos")
+
+                print("\n")
                 STARTDAY = STARTDAY + timedelta(days=1)
                 NEXTDAY = NEXTDAY + timedelta(days=1)
                 START = int(time.mktime(STARTDAY.timetuple()) * 1000000000)
